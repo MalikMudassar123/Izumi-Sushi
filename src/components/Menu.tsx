@@ -7,11 +7,12 @@ import useScrollReveal from "@/hooks/useScrollReveal";
 function MenuCard({ item, index }: { item: MenuItem; index: number }) {
   return (
     <article
-      className={`reveal delay-${Math.min(index % 6 + 1, 6)} group relative flex flex-col overflow-hidden`}
+      className="menu-card group relative flex flex-col overflow-hidden"
       style={{
         background: "var(--color-black-card)",
         border: "1px solid rgba(255,255,255,0.06)",
         transition: "border-color 400ms var(--ease-out-expo), transform 400ms var(--ease-out-expo)",
+        animationDelay: `${Math.min(index, 7) * 70}ms`,
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,160,80,0.35)";
@@ -201,6 +202,25 @@ export default function Menu() {
         </div>
 
       </div>
+
+      {/* Card mount animation — replays whenever the grid remounts on filter
+          change, so cards are never left invisible (independent of the
+          scroll-reveal observer). */}
+      <style>{`
+        @keyframes menu-card-in {
+          from { opacity: 0; translate: 0 28px; }
+          to   { opacity: 1; translate: 0 0; }
+        }
+        /* Uses the standalone 'translate' property so the hover-lift
+           'transform' on the card composes cleanly without conflict. */
+        .menu-card {
+          opacity: 0;
+          animation: menu-card-in 0.6s var(--ease-out-expo) forwards;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .menu-card { animation: none; opacity: 1; }
+        }
+      `}</style>
     </section>
   );
 }
