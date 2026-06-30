@@ -24,8 +24,6 @@
 }
 
 /* ─── Reset & Base ───────────────────────────────────────────────────── */
-/* Wrapped in @layer base so Tailwind's layered utilities (px-*, mx-*, etc.)
-   always win over these resets in the cascade. */
 @layer base {
   *, *::before, *::after {
     box-sizing: border-box;
@@ -49,12 +47,29 @@
     overflow-x: hidden;
   }
 
+  /* Film-grain overlay — adds analog luxury texture site-wide */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9990;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.68' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    background-size: 200px;
+    background-repeat: repeat;
+    opacity: 0.030;
+    mix-blend-mode: overlay;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-serif);
     font-weight: 300;
     line-height: 1.1;
     color: var(--color-white);
+    text-wrap: balance;
   }
+
+  section[id] { scroll-margin-top: 96px; }
 
   h1 { font-size: clamp(3rem, 8vw, 7rem); }
   h2 { font-size: clamp(2rem, 4.5vw, 3.8rem); }
@@ -69,6 +84,30 @@
 
   a { color: inherit; text-decoration: none; }
   img, video { display: block; max-width: 100%; }
+}
+
+/* ─── Scroll progress bar ────────────────────────────────────────────── */
+.scroll-progress-track {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 9995;
+  background: rgba(201, 160, 80, 0.07);
+  pointer-events: none;
+}
+
+.scroll-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg,
+    var(--color-gold-dark) 0%,
+    var(--color-gold)      55%,
+    var(--color-gold-light) 100%
+  );
+  box-shadow: 0 0 12px rgba(201, 160, 80, 0.55);
+  will-change: width;
 }
 
 /* ─── Layout ─────────────────────────────────────────────────────────── */
@@ -98,6 +137,22 @@
 }
 .gold-line--center { margin-inline: auto; }
 
+/* Animated width reveal when paired with a scroll-reveal class */
+.gold-line.reveal,
+.gold-line.reveal-left,
+.gold-line.reveal-right {
+  width: 0;
+  transition:
+    opacity var(--duration-slow) var(--ease-out-expo),
+    transform var(--duration-slow) var(--ease-out-expo),
+    width 900ms var(--ease-out-expo) 150ms;
+}
+.gold-line.reveal.is-visible,
+.gold-line.reveal-left.is-visible,
+.gold-line.reveal-right.is-visible {
+  width: 56px;
+}
+
 /* ─── Buttons ────────────────────────────────────────────────────────── */
 .btn {
   display: inline-flex;
@@ -113,15 +168,24 @@
   position: relative;
   overflow: hidden;
   white-space: nowrap;
+  transition:
+    transform var(--duration-base) var(--ease-out-expo),
+    box-shadow var(--duration-base) var(--ease-out-expo);
 }
+
+.btn:hover  { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
 
 .btn--primary {
   padding: 1.05em 2.6em;
   background: var(--color-gold);
   color: var(--color-black);
   border: 1px solid var(--color-gold);
-  transition: color var(--duration-base) var(--ease-out-expo),
-              background var(--duration-base) var(--ease-out-expo);
+  transition:
+    color var(--duration-base) var(--ease-out-expo),
+    background var(--duration-base) var(--ease-out-expo),
+    box-shadow var(--duration-base) var(--ease-out-expo),
+    transform var(--duration-base) var(--ease-out-expo);
 }
 
 .btn--primary::before {
@@ -136,6 +200,7 @@
 
 .btn--primary:hover {
   color: var(--color-gold);
+  box-shadow: 0 0 32px rgba(201,160,80,0.28), 0 8px 28px rgba(0,0,0,0.35);
 }
 
 .btn--primary:hover::before {
@@ -149,15 +214,19 @@
   background: transparent;
   color: var(--color-white);
   border: 1px solid rgba(255,255,255,0.3);
-  transition: background var(--duration-base) var(--ease-out-expo),
-              color var(--duration-base) var(--ease-out-expo),
-              border-color var(--duration-base) var(--ease-out-expo);
+  transition:
+    background var(--duration-base) var(--ease-out-expo),
+    color var(--duration-base) var(--ease-out-expo),
+    border-color var(--duration-base) var(--ease-out-expo),
+    box-shadow var(--duration-base) var(--ease-out-expo),
+    transform var(--duration-base) var(--ease-out-expo);
 }
 
 .btn--outline:hover {
   background: var(--color-white);
   color: var(--color-black);
   border-color: var(--color-white);
+  box-shadow: 0 0 28px rgba(250,250,248,0.12), 0 8px 28px rgba(0,0,0,0.35);
 }
 
 .btn--ghost {
@@ -172,6 +241,7 @@
   text-transform: uppercase;
   cursor: pointer;
   position: relative;
+  transition: transform var(--duration-base) var(--ease-out-expo);
 }
 
 .btn--ghost::after {
@@ -186,50 +256,157 @@
 }
 
 .btn--ghost:hover::after { width: 100%; }
+.btn--ghost:hover { transform: translateX(4px); }
 
 /* ─── Scroll reveal animations ───────────────────────────────────────── */
 .reveal {
   opacity: 0;
   transform: translateY(36px);
-  transition: opacity var(--duration-slow) var(--ease-out-expo),
-              transform var(--duration-slow) var(--ease-out-expo);
+  transition:
+    opacity var(--duration-slow) var(--ease-out-expo),
+    transform var(--duration-slow) var(--ease-out-expo);
 }
 
 .reveal-left {
   opacity: 0;
-  transform: translateX(-48px);
-  transition: opacity var(--duration-slow) var(--ease-out-expo),
-              transform var(--duration-slow) var(--ease-out-expo);
+  transform: translateX(-52px);
+  transition:
+    opacity var(--duration-slow) var(--ease-out-expo),
+    transform var(--duration-slow) var(--ease-out-expo);
 }
 
 .reveal-right {
   opacity: 0;
-  transform: translateX(48px);
-  transition: opacity var(--duration-slow) var(--ease-out-expo),
-              transform var(--duration-slow) var(--ease-out-expo);
+  transform: translateX(52px);
+  transition:
+    opacity var(--duration-slow) var(--ease-out-expo),
+    transform var(--duration-slow) var(--ease-out-expo);
 }
 
 .reveal-scale {
   opacity: 0;
   transform: scale(0.93);
-  transition: opacity var(--duration-slow) var(--ease-out-expo),
-              transform var(--duration-slow) var(--ease-out-expo);
+  transition:
+    opacity var(--duration-slow) var(--ease-out-expo),
+    transform var(--duration-slow) var(--ease-out-expo);
+}
+
+.reveal-blur {
+  opacity: 0;
+  filter: blur(14px);
+  transform: translateY(18px);
+  transition:
+    opacity 850ms var(--ease-out-expo),
+    filter 850ms var(--ease-out-expo),
+    transform 850ms var(--ease-out-expo);
 }
 
 .reveal.is-visible,
 .reveal-left.is-visible,
 .reveal-right.is-visible,
-.reveal-scale.is-visible {
+.reveal-scale.is-visible,
+.reveal-blur.is-visible {
   opacity: 1;
   transform: none;
+  filter: none;
 }
 
-.delay-1 { transition-delay: 80ms; }
+.delay-1 { transition-delay: 80ms;  }
 .delay-2 { transition-delay: 160ms; }
 .delay-3 { transition-delay: 240ms; }
 .delay-4 { transition-delay: 320ms; }
 .delay-5 { transition-delay: 400ms; }
 .delay-6 { transition-delay: 480ms; }
+.delay-7 { transition-delay: 560ms; }
+.delay-8 { transition-delay: 640ms; }
+.delay-9 { transition-delay: 720ms; }
+
+/* ─── Glass card utilities ───────────────────────────────────────────── */
+.glass-card {
+  background: rgba(20, 20, 20, 0.65);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.28), 0 2px 10px rgba(0,0,0,0.18);
+}
+
+.glass-card--gold {
+  background: rgba(201, 160, 80, 0.055);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(201, 160, 80, 0.18);
+}
+
+/* ─── Michelin badge ─────────────────────────────────────────────────── */
+.michelin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.45em 1.4em;
+  border: 1px solid rgba(201, 160, 80, 0.45);
+  background: rgba(201, 160, 80, 0.07);
+  backdrop-filter: blur(8px);
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--color-gold-light);
+}
+
+/* ─── Premium divider ────────────────────────────────────────────────── */
+.premium-divider {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  margin: 2rem 0;
+}
+
+.premium-divider::before,
+.premium-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(201,160,80,0.35), transparent);
+}
+
+/* ─── Keyframe animations ────────────────────────────────────────────── */
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%       { transform: translateY(-10px) rotate(0.8deg); }
+  66%       { transform: translateY(-5px) rotate(-0.4deg); }
+}
+
+@keyframes float-gentle-2 {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-14px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.10; }
+  50%       { opacity: 0.22; }
+}
+
+@keyframes spin-slow {
+  from { transform: translate(-50%, -52%) rotate(0deg); }
+  to   { transform: translate(-50%, -52%) rotate(360deg); }
+}
+
+@keyframes spin-slow-reverse {
+  from { transform: translate(-50%, -52%) rotate(0deg); }
+  to   { transform: translate(-50%, -52%) rotate(-360deg); }
+}
+
+@keyframes char-in {
+  from { opacity: 0; transform: translateY(32px) skewY(3deg); }
+  to   { opacity: 1; transform: translateY(0) skewY(0deg); }
+}
+
+@keyframes fade-up-in {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 /* ─── Japanese decorative divider ────────────────────────────────────── */
 .jp-divider {
@@ -259,7 +436,7 @@
   color: var(--color-gold);
 }
 
-/* ─── Custom carousel arrow buttons ──────────────────────────────────── */
+/* ─── Gallery / carousel arrows ──────────────────────────────────────── */
 .gallery-arrow {
   display: inline-flex;
   align-items: center;
@@ -272,20 +449,23 @@
   color: var(--color-gold);
   cursor: pointer;
   backdrop-filter: blur(6px);
-  transition: background var(--duration-base) var(--ease-out-expo),
-              border-color var(--duration-base) var(--ease-out-expo),
-              color var(--duration-base) var(--ease-out-expo),
-              transform var(--duration-base) var(--ease-out-expo);
+  transition:
+    background var(--duration-base) var(--ease-out-expo),
+    border-color var(--duration-base) var(--ease-out-expo),
+    color var(--duration-base) var(--ease-out-expo),
+    transform var(--duration-base) var(--ease-out-expo),
+    box-shadow var(--duration-base) var(--ease-out-expo);
 }
 
 .gallery-arrow:hover {
   background: var(--color-gold);
   border-color: var(--color-gold);
   color: var(--color-black);
+  box-shadow: 0 0 22px rgba(201,160,80,0.35);
 }
 
 .gallery-arrow:active {
-  transform: scale(0.92);
+  transform: scale(0.9);
 }
 
 .gallery-arrow svg {
@@ -293,7 +473,7 @@
 }
 
 .gallery-arrow.swiper-button-disabled {
-  opacity: 0.35;
+  opacity: 0.3;
   cursor: default;
 }
 
@@ -301,41 +481,50 @@
   background: rgba(20, 20, 20, 0.6);
   border-color: rgba(201, 160, 80, 0.4);
   color: var(--color-gold);
+  box-shadow: none;
 }
 
-/* Equal-height slides so testimonial cards align regardless of quote length */
-.swiper-slide {
-  height: auto;
-}
+.swiper-slide { height: auto; }
 
 /* ─── Swiper pagination ──────────────────────────────────────────────── */
 .swiper-pagination-bullet {
   background: var(--color-white-muted) !important;
-  opacity: 0.4 !important;
+  opacity: 0.35 !important;
   transition: all var(--duration-base) !important;
 }
 
 .swiper-pagination-bullet-active {
   background: var(--color-gold) !important;
   opacity: 1 !important;
-  transform: scale(1.35) !important;
+  transform: scale(1.4) !important;
 }
 
 /* ─── Form inputs ────────────────────────────────────────────────────── */
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: rgba(201, 160, 80, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+}
+
 input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: rgba(201, 160, 80, 0.6) !important;
-  box-shadow: 0 0 0 1px rgba(201, 160, 80, 0.15);
+  border-color: rgba(201, 160, 80, 0.7) !important;
+  box-shadow: 0 0 0 1px rgba(201,160,80,0.12), 0 0 18px rgba(201,160,80,0.07) !important;
+  background: rgba(201, 160, 80, 0.035) !important;
+}
+
+.footer-newsletter-input:hover {
+  background: rgba(255, 255, 255, 0.07);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: rgba(136, 136, 128, 0.6);
+  color: rgba(136, 136, 128, 0.45);
 }
 
-/* Remove default date/select arrows on some browsers */
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.5) sepia(1) saturate(2) hue-rotate(5deg);
   cursor: pointer;
@@ -344,6 +533,28 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 /* ─── Scrollbar ──────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: var(--color-black); }
-::-webkit-scrollbar-thumb { background: var(--color-gold-dark); border-radius: 2px; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, var(--color-gold-dark), var(--color-gold));
+  border-radius: 2px;
+}
 
 ::selection { background: var(--color-gold); color: var(--color-black); }
+
+/* ─── Focus states ───────────────────────────────────────────────────── */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid rgba(201, 160, 80, 0.75);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

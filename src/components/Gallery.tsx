@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperClass } from "swiper";
 import { Autoplay, Navigation, Pagination, A11y } from "swiper/modules";
@@ -57,6 +57,33 @@ export default function Gallery() {
   const prevRef = useRef<HTMLButtonElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
   useScrollReveal(sectionRef);
+
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+  const showPrev = useCallback(
+    () => setLightboxIndex(i => (i === null ? null : (i - 1 + galleryImages.length) % galleryImages.length)),
+    []
+  );
+  const showNext = useCallback(
+    () => setLightboxIndex(i => (i === null ? null : (i + 1) % galleryImages.length)),
+    []
+  );
+
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft") showPrev();
+      if (e.key === "ArrowRight") showNext();
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [lightboxIndex, closeLightbox, showPrev, showNext]);
 
   return (
     <section
@@ -122,9 +149,15 @@ export default function Gallery() {
           style={{ paddingBottom: "56px" }}
           aria-label="Food gallery"
         >
-          {galleryImages.map((img) => (
+          {galleryImages.map((img, i) => (
             <SwiperSlide key={img.src}>
-              <div className="relative overflow-hidden group" style={{ aspectRatio: "4/3" }}>
+              <button
+                type="button"
+                onClick={() => setLightboxIndex(i)}
+                className="relative overflow-hidden group w-full text-left"
+                style={{ aspectRatio: "4/3" }}
+                aria-label={`View larger image: ${img.caption}`}
+              >
                 <img
                   src={img.src}
                   alt={img.alt}
@@ -133,7 +166,7 @@ export default function Gallery() {
                 />
                 {/* Caption overlay */}
                 <div
-                  className="absolute inset-0 flex items-end p-6 opacity-0 group-hover:opacity-100"
+                  className="absolute inset-0 flex items-end justify-between p-6 opacity-0 group-hover:opacity-100"
                   style={{
                     background: "linear-gradient(to top, rgba(8,8,8,0.85) 0%, transparent 60%)",
                     transition: "opacity 400ms var(--ease-out-expo)",
@@ -150,12 +183,94 @@ export default function Gallery() {
                   >
                     {img.caption}
                   </span>
+                  <span
+                    className="flex items-center justify-center flex-shrink-0"
+                    style={{
+                      width: "38px",
+                      height: "38px",
+                      borderRadius: "50%",
+                      border: "1px solid rgba(201,160,80,0.5)",
+                      background: "rgba(8,8,8,0.4)",
+                    }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-gold)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                    </svg>
+                  </span>
                 </div>
-              </div>
+              </button>
             </SwiperSlide>
           ))}
         </Swiper>
       </div>
+
+      {/* ── Lightbox ───────────────────────────────────────────── */}
+      {lightboxIndex !== null && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10"
+          style={{ background: "rgba(8,8,8,0.96)", animation: "fade-up-in 300ms var(--ease-out-expo)" }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Gallery image viewer"
+          onClick={closeLightbox}
+        >
+          <button
+            type="button"
+            onClick={closeLightbox}
+            aria-label="Close"
+            className="absolute top-5 right-5 md:top-8 md:right-8 flex items-center justify-center"
+            style={{ width: "44px", height: "44px", border: "1px solid rgba(255,255,255,0.15)", color: "var(--color-white)" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); showPrev(); }}
+            aria-label="Previous image"
+            className="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 flex items-center justify-center"
+            style={{ width: "48px", height: "48px", border: "1px solid rgba(255,255,255,0.15)", color: "var(--color-white)" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); showNext(); }}
+            aria-label="Next image"
+            className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 flex items-center justify-center"
+            style={{ width: "48px", height: "48px", border: "1px solid rgba(255,255,255,0.15)", color: "var(--color-white)" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+
+          <div
+            className="relative max-w-4xl w-full"
+            onClick={e => e.stopPropagation()}
+          >
+            <img
+              src={galleryImages[lightboxIndex].src.replace("w=1100", "w=1800")}
+              alt={galleryImages[lightboxIndex].alt}
+              className="w-full h-auto max-h-[78vh] object-contain mx-auto"
+              style={{ boxShadow: "0 40px 100px rgba(0,0,0,0.6)" }}
+            />
+            <div className="text-center mt-6">
+              <span style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", fontWeight: 300, color: "var(--color-white)" }}>
+                {galleryImages[lightboxIndex].caption}
+              </span>
+              <p className="section-label mt-2" style={{ fontSize: "0.6rem" }}>
+                {lightboxIndex + 1} / {galleryImages.length}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

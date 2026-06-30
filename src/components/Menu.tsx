@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { menuItems, menuCategories, type MenuItem } from "@/lib/data";
 import useScrollReveal from "@/hooks/useScrollReveal";
+import { smoothScrollTo } from "@/lib/lenis";
 
 function MenuCard({ item, index }: { item: MenuItem; index: number }) {
   return (
@@ -11,16 +12,20 @@ function MenuCard({ item, index }: { item: MenuItem; index: number }) {
       style={{
         background: "var(--color-black-card)",
         border: "1px solid rgba(255,255,255,0.06)",
-        transition: "border-color 400ms var(--ease-out-expo), transform 400ms var(--ease-out-expo)",
         animationDelay: `${Math.min(index, 7) * 70}ms`,
+        transition: "border-color 400ms var(--ease-out-expo), transform 400ms var(--ease-out-expo), box-shadow 400ms var(--ease-out-expo)",
       }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,160,80,0.35)";
-        (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)";
+      onMouseEnter={e => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.borderColor = "rgba(201,160,80,0.4)";
+        el.style.transform = "translateY(-6px)";
+        el.style.boxShadow = "0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,160,80,0.1)";
       }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)";
-        (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+      onMouseLeave={e => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.borderColor = "rgba(255,255,255,0.06)";
+        el.style.transform = "translateY(0)";
+        el.style.boxShadow = "none";
       }}
     >
       {/* Image */}
@@ -31,22 +36,24 @@ function MenuCard({ item, index }: { item: MenuItem; index: number }) {
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           loading="lazy"
         />
+        {/* Hover gradient overlay */}
         <div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400"
-          style={{ background: "linear-gradient(to top, rgba(8,8,8,0.7) 0%, transparent 60%)" }}
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{ background: "linear-gradient(to top, rgba(8,8,8,0.75) 0%, rgba(8,8,8,0.1) 55%, transparent 100%)" }}
         />
+        {/* Tag badge */}
         {item.tag && (
           <span
             className="absolute top-3 left-3"
             style={{
               fontFamily: "var(--font-sans)",
-              fontSize: "0.6rem",
-              fontWeight: 500,
-              letterSpacing: "0.2em",
+              fontSize: "0.58rem",
+              fontWeight: 600,
+              letterSpacing: "0.22em",
               textTransform: "uppercase",
               color: "var(--color-black)",
               background: "var(--color-gold)",
-              padding: "0.3em 0.8em",
+              padding: "0.32em 0.85em",
             }}
           >
             {item.tag}
@@ -55,31 +62,25 @@ function MenuCard({ item, index }: { item: MenuItem; index: number }) {
       </div>
 
       {/* Content */}
-      <div className="flex flex-col flex-1 p-6">
+      <div className="flex flex-col flex-1 p-5 md:p-6">
         <div className="flex items-start justify-between gap-3 mb-2">
           <div>
-            <h3 style={{ fontSize: "1.15rem", fontWeight: 400, marginBottom: "0.15rem" }}>
+            <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.2rem", fontWeight: 400, marginBottom: "0.15rem", lineHeight: 1.2 }}>
               {item.name}
             </h3>
-            <span
-              style={{
-                fontFamily: "var(--font-serif)",
-                fontSize: "0.85rem",
-                color: "var(--color-gold)",
-                opacity: 0.7,
-              }}
-            >
+            <span style={{ fontFamily: "var(--font-serif)", fontSize: "0.82rem", color: "var(--color-gold)", opacity: 0.65 }}>
               {item.nameJp}
             </span>
           </div>
           <span
             style={{
               fontFamily: "var(--font-serif)",
-              fontSize: "1.3rem",
+              fontSize: "1.35rem",
               fontWeight: 300,
               color: "var(--color-gold)",
               whiteSpace: "nowrap",
               flexShrink: 0,
+              textShadow: "0 0 20px rgba(201,160,80,0.2)",
             }}
           >
             {item.price}
@@ -90,10 +91,10 @@ function MenuCard({ item, index }: { item: MenuItem; index: number }) {
           {item.description}
         </p>
 
-        {/* Hover reveal line */}
+        {/* Animated gold line reveal */}
         <div
-          className="h-px bg-[var(--color-gold)] mt-4 origin-left scale-x-0 group-hover:scale-x-100"
-          style={{ transition: "transform 400ms var(--ease-out-expo)" }}
+          className="h-px bg-gradient-to-r from-[var(--color-gold)] to-transparent mt-5 origin-left scale-x-0 group-hover:scale-x-100"
+          style={{ transition: "transform 500ms var(--ease-out-expo)" }}
         />
       </div>
     </article>
@@ -105,10 +106,9 @@ export default function Menu() {
   const sectionRef = useRef<HTMLElement>(null);
   useScrollReveal(sectionRef);
 
-  const filtered =
-    activeCategory === "all"
-      ? menuItems
-      : menuItems.filter((i) => i.category === activeCategory);
+  const filtered = activeCategory === "all"
+    ? menuItems
+    : menuItems.filter(i => i.category === activeCategory);
 
   return (
     <section
@@ -120,12 +120,12 @@ export default function Menu() {
       {/* Background accent */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 60% 50% at 20% 80%, rgba(201,160,80,0.04) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(ellipse 60% 50% at 18% 80%, rgba(201,160,80,0.045) 0%, transparent 70%)" }}
       />
 
       <div className="container">
 
-        {/* ── Section header ──────────────────────────────────── */}
+        {/* Section header */}
         <div className="text-center mb-16">
           <span className="section-label reveal">Our Menu</span>
           <div className="gold-line gold-line--center reveal delay-1" />
@@ -138,81 +138,86 @@ export default function Menu() {
           </p>
         </div>
 
-        {/* ── Category tabs ────────────────────────────────────── */}
+        {/* Category tabs — pill style */}
         <nav
           aria-label="Menu categories"
-          className="flex flex-wrap justify-center gap-2 mb-14 reveal delay-4"
+          className="flex flex-wrap justify-center gap-2.5 mb-14 reveal delay-4"
         >
-          {menuCategories.map((cat) => (
+          {menuCategories.map(cat => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className="relative px-5 py-2 transition-all duration-300"
-              style={{
-                fontFamily: "var(--font-sans)",
-                fontSize: "0.7rem",
-                fontWeight: 500,
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                background: activeCategory === cat.id ? "var(--color-gold)" : "transparent",
-                color: activeCategory === cat.id ? "var(--color-black)" : "var(--color-white-muted)",
-                border: `1px solid ${activeCategory === cat.id ? "var(--color-gold)" : "rgba(255,255,255,0.12)"}`,
-              }}
               aria-pressed={activeCategory === cat.id}
+              className="flex flex-col items-center transition-all duration-350"
+              style={{
+                padding: "0.6em 1.5em",
+                borderRadius: "9999px",
+                fontFamily: "var(--font-sans)",
+                fontSize: "0.68rem",
+                fontWeight: 500,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                background: activeCategory === cat.id
+                  ? "var(--color-gold)"
+                  : "rgba(255,255,255,0.04)",
+                color: activeCategory === cat.id
+                  ? "var(--color-black)"
+                  : "var(--color-white-muted)",
+                border: `1px solid ${activeCategory === cat.id ? "var(--color-gold)" : "rgba(255,255,255,0.1)"}`,
+                boxShadow: activeCategory === cat.id
+                  ? "0 0 24px rgba(201,160,80,0.25)"
+                  : "none",
+                lineHeight: 1.1,
+              }}
             >
-              {cat.label}
-              <span
-                style={{
-                  display: "block",
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "0.65rem",
-                  color: activeCategory === cat.id ? "rgba(8,8,8,0.6)" : "var(--color-gold)",
-                  letterSpacing: "0.1em",
-                  lineHeight: 1.2,
-                  opacity: 0.8,
-                }}
-              >
+              <span>{cat.label}</span>
+              <span style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "0.6rem",
+                color: activeCategory === cat.id ? "rgba(8,8,8,0.55)" : "var(--color-gold)",
+                letterSpacing: "0.08em",
+                opacity: 0.75,
+                marginTop: "0.1em",
+              }}>
                 {cat.labelJp}
               </span>
             </button>
           ))}
         </nav>
 
-        {/* ── Grid ────────────────────────────────────────────── */}
+        {/* Grid */}
         <div
           key={activeCategory}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 md:gap-6"
         >
           {filtered.map((item, i) => (
             <MenuCard key={item.id} item={item} index={i} />
           ))}
         </div>
 
-        {/* ── Bottom CTA ──────────────────────────────────────── */}
+        {/* Bottom CTA */}
         <div className="text-center mt-16 reveal">
-          <p className="mb-6" style={{ fontSize: "0.9rem" }}>
+          <p className="mb-6" style={{ fontSize: "0.88rem" }}>
             Dietary requirements? Allergies? We accommodate every need.
           </p>
           <button
-            onClick={() => document.getElementById("reservations")?.scrollIntoView({ behavior: "smooth" })}
+            onClick={() => smoothScrollTo("#reservations")}
             className="btn btn--primary"
           >
             <span>Make a Reservation</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
 
       </div>
 
-      {/* Card mount animation — replays whenever the grid remounts on filter
-          change, so cards are never left invisible (independent of the
-          scroll-reveal observer). */}
       <style>{`
         @keyframes menu-card-in {
-          from { opacity: 0; translate: 0 28px; }
+          from { opacity: 0; translate: 0 30px; }
           to   { opacity: 1; translate: 0 0; }
         }
-        /* Uses the standalone 'translate' property so the hover-lift
-           'transform' on the card composes cleanly without conflict. */
         .menu-card {
           opacity: 0;
           animation: menu-card-in 0.6s var(--ease-out-expo) forwards;
